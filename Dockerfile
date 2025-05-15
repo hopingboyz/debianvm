@@ -1,5 +1,5 @@
-# Use Debian
-FROM debian:stable-slim
+# Use Ubuntu 24.04 as base
+FROM debian:10
 
 # Install minimal dependencies
 RUN apt-get update && \
@@ -12,11 +12,8 @@ RUN apt-get update && \
     websockify \
     && rm -rf /var/lib/apt/lists/*
 
-# Download the latest Debian netinst ISO (using the redirect URL)
-RUN wget -q https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/ -O /tmp/debian-iso.html && \
-    ISO_URL=$(grep -oP 'https://cdimage.debian.org/debian-cd/[^"]*amd64-netinst.iso' /tmp/debian-iso.html | head -1) && \
-    wget -q "$ISO_URL" -O /debian.iso && \
-    rm /tmp/debian-iso.html
+# Download the LATEST Ubuntu Server ISO (will prompt during install)
+RUN wget -q https://archive.debian.org/debian/dists/buster/main/installer-amd64/current/images/netboot/mini.iso -O /ubuntu.iso
 
 # Create startup script
 RUN echo '#!/bin/bash\n\
@@ -27,9 +24,9 @@ qemu-img create -f qcow2 /disk.qcow2 20G\n\
 # Start QEMU with full interactive installation\n\
 qemu-system-x86_64 \\\n\
     -enable-kvm \\\n\
-    -cdrom /debian.iso \\\n\
+    -cdrom /ubuntu.iso \\\n\
     -drive file=/disk.qcow2,format=qcow2 \\\n\
-    -m 4G \\\n\
+    -m 6G \\\n\
     -smp 4 \\\n\
     -device virtio-net,netdev=net0 \\\n\
     -netdev user,id=net0,hostfwd=tcp::2222-:22 \\\n\
@@ -40,7 +37,7 @@ qemu-system-x86_64 \\\n\
 websockify --web /usr/share/novnc/ 6080 localhost:5900 &\n\
 \n\
 echo "================================================"\n\
-echo "Debian Installation Starting..."\n\
+echo "Ubuntu Server Installation Starting..."\n\
 echo "1. Connect to VNC: http://localhost:6080"\n\
 echo "2. Complete the interactive installation"\n\
 echo "3. Set your username/password when prompted"\n\
