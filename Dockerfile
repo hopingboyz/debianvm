@@ -1,4 +1,4 @@
-# Use Debian stable as base
+# Use Debian
 FROM debian:stable-slim
 
 # Install minimal dependencies
@@ -12,8 +12,11 @@ RUN apt-get update && \
     websockify \
     && rm -rf /var/lib/apt/lists/*
 
-# Download the latest Debian netinst ISO
-RUN wget -q https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.5.0-amd64-netinst.iso -O /debian.iso
+# Download the latest Debian netinst ISO (using the redirect URL)
+RUN wget -q https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/ -O /tmp/debian-iso.html && \
+    ISO_URL=$(grep -oP 'https://cdimage.debian.org/debian-cd/[^"]*amd64-netinst.iso' /tmp/debian-iso.html | head -1) && \
+    wget -q "$ISO_URL" -O /debian.iso && \
+    rm /tmp/debian-iso.html
 
 # Create startup script
 RUN echo '#!/bin/bash\n\
